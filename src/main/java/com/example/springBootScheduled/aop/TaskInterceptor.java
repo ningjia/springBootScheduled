@@ -1,4 +1,4 @@
-package com.example.springBootScheduled.springBootScheduled.aop;
+package com.example.springBootScheduled.aop;
 
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -27,7 +27,7 @@ public class TaskInterceptor {
      * 3、第二个*号：表示类名，*号表示所有的类。
      * 4、*(..)：最后这个星号表示方法名，*号表示所有的方法，后面括弧里面表示方法的参数，两个句点表示任何参数。
      */
-    @Around("execution(* com.example.springBootScheduled.springBootScheduled.component..*.*(..)) && @annotation(org.springframework.scheduling.annotation.Scheduled)")
+    @Around("execution(* com.example.springBootScheduled.component..*.*(..)) && @annotation(org.springframework.scheduling.annotation.Scheduled)")
     public Object around(ProceedingJoinPoint pjp) throws Throwable {
         String methodName = pjp.getSignature().getName();
         String currentThread = Thread.currentThread().getName();
