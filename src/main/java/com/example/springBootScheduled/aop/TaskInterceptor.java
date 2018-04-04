@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StopWatch;
 
 import java.net.InetAddress;
 
@@ -17,7 +18,7 @@ public class TaskInterceptor {
     protected final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Value("${scheduled.aop.host}")
-    String host;
+    String host;//可以执行计划任务的主机名称（白名单）
 
     /**
      *
@@ -32,21 +33,28 @@ public class TaskInterceptor {
         String methodName = pjp.getSignature().getName();
         String currentThread = Thread.currentThread().getName();
         if (!allowedBatchExec()) {
-            logger.info("Skip batch ({}): {}", currentThread, methodName);
+            logger.debug("Skip scheduled ({}): {}", currentThread, methodName);
             return null;
         }
-        logger.info("Begin batch ({}): {}", currentThread, methodName);
-//        Stopwatch stopWatch = Stopwatch.createStarted();
+        logger.debug("Begin scheduled ({}): {}", currentThread, methodName);
+        StopWatch sw = new StopWatch(currentThread);//根据线程名称来进行构造，防止多线程处理的问题
+        sw.start(methodName);
         try {
             return pjp.proceed();
         } catch (Exception e) {
-            logger.error("batch error: {}", methodName, e);
+            logger.error("scheduled error: {}", methodName, e);
             return null;
         } finally {
-//            logger.info("End batch ({}): {}, elapsed = {} (ms)", currentThread, methodName, stopWatch.elapsed(TimeUnit.MILLISECONDS));
+            sw.stop();
+            logger.debug("End scheduled ({}): {}, TotalTime = {} (ms)", currentThread, methodName, sw.getTotalTimeMillis());
+            logger.debug(sw.prettyPrint());
         }
     }
 
+    /**
+     * 判断当前服务，是否允许执行计划任务（scheduled）
+     * @return
+     */
     private boolean allowedBatchExec() {
         if (getHostName().equals(host)) {
             return true;
@@ -54,6 +62,10 @@ public class TaskInterceptor {
         return false;
     }
 
+    /**
+     * 获取当前主机名称
+     * @return
+     */
     private String getHostName(){
         String IP = "";
         String host = "";
@@ -67,7 +79,7 @@ public class TaskInterceptor {
         {
             e.printStackTrace();
         }
-//        logger.info("HOST="+host+",IP="+IP);
+//        logger.debug("HOST="+host+",IP="+IP);
         return host;
     }
 
