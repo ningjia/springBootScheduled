@@ -47,6 +47,10 @@ public class TaskInterceptor {
         } finally {
             sw.stop();
             logger.debug("End scheduled ({}): {}, TotalTime = {} (ms)", currentThread, methodName, sw.getTotalTimeMillis());
+            //以下代码是为了测试StopWatch的prettyPrint方法，无实际含义
+            sw.start("Sleep");
+            Thread.sleep(1);
+            sw.stop();
             logger.debug(sw.prettyPrint());
         }
     }
